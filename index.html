@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>People Decoder AI | Neural Relationship Analysis</title>
+  <link rel="stylesheet" href="style.css">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&family=Outfit:wght@400;700;900&display=swap" rel="stylesheet">
+  <!-- Phosphor Icons -->
+  <script src="https://unpkg.com/@phosphor-icons/web"></script>
+  <!-- HTML2Canvas for Export -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+</head>
+<body>
+
+  <!-- Background Effects -->
+  <div class="bg-glow blob-1"></div>
+  <div class="bg-glow blob-2"></div>
+  <div class="grid-overlay"></div>
+
+  <!-- Header -->
+  <header>
+    <div class="logo">
+      <i class="ph ph-brain"></i>
+      <span>PEOPLE <strong>DECODER</strong> AI</span>
+    </div>
+    <div class="header-actions">
+    </div>
+  </header>
+
+  <main>
+    <!-- Settings Modal Removed -->
+
+    <!-- Input Section -->
+    <section class="input-section glass-panel" id="inputSection">
+      <div class="section-title">
+        <h2><i class="ph ph-chat-text"></i> Provide Chat Data</h2>
+        <p>Paste Instagram, WhatsApp, or any text messages to decode their true intentions, emotional attachment, and hidden feelings.</p>
+        
+        <div class="help-box" style="margin-top: 15px; background: rgba(6, 182, 212, 0.1); border-left: 3px solid var(--accent-secondary); padding: 10px 15px; border-radius: 0 8px 8px 0; text-align: left; font-size: 0.9rem;">
+          <strong><i class="ph ph-info"></i> How to get Instagram JSON chat?</strong><br>
+          <span style="color: var(--text-muted);">Go to Instagram Settings > Your Activity > Download your information > Request a download. Select <strong>JSON</strong> format. Once downloaded, extract the ZIP and upload the chat files from <code>messages/inbox</code> folder here!</span>
+        </div>
+      </div>
+
+      <div class="input-group">
+
+        <div class="file-upload-wrapper" style="margin-bottom: 1.5rem; display: flex; flex-direction: column; gap: 12px;">
+          <label id="labelUpload">Step 1: Upload Chat (Files or Folder)</label>
+          <div style="display: flex; gap: 10px;">
+            <label for="chatFileInput" class="file-upload-btn" style="flex: 1;">
+              <i class="ph ph-file-text"></i> Upload Files
+            </label>
+            <input type="file" id="chatFileInput" class="hidden-file-input" multiple>
+            
+            <label for="chatFolderInput" class="file-upload-btn" style="flex: 1;">
+              <i class="ph ph-folder-open"></i> Upload Folder
+            </label>
+            <input type="file" id="chatFolderInput" class="hidden-file-input" webkitdirectory directory multiple>
+          </div>
+          <div id="fileNameDisplay" class="file-name-display" style="font-size: 0.9rem; color: var(--accent-secondary); font-weight: 500; text-align: center; min-height: 20px;"></div>
+        </div>
+        
+        <label id="labelLanguage">AI Analysis Language</label>
+        <div class="custom-select-wrapper" style="position: relative; margin-bottom: 15px;">
+          <select id="languageSelect" class="premium-select">
+            <option value="English" selected>English</option>
+            <option value="Hinglish (Hindi + English slang)">Hinglish</option>
+            <option value="Hindi">Hindi (हिंदी)</option>
+            <option value="Spanish">Spanish (Español)</option>
+            <option value="French">French (Français)</option>
+            <option value="Arabic">Arabic (العربية)</option>
+            <option value="Portuguese">Portuguese (Português)</option>
+            <option value="Russian">Russian (Русский)</option>
+            <option value="Japanese">Japanese (日本語)</option>
+            <option value="Korean">Korean (한국어)</option>
+          </select>
+          <i class="ph ph-caret-down" style="position: absolute; right: 16px; top: 50%; transform: translateY(-50%); color: var(--accent-secondary); pointer-events: none; font-size: 18px;"></i>
+        </div>
+        
+        <label id="labelTarget">Target's Name / Username (Optional, helps AI focus)</label>
+        <input type="text" id="targetNameInput" placeholder="E.g., katita_123" style="width: 100%; padding: 12px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.1); background: rgba(0,0,0,0.3); color: white; margin-bottom: 15px; font-family: 'Inter', sans-serif;">
+        
+        <div id="pasteChatSection">
+          <label id="labelPaste">Or Paste Chat Export / Message Log</label>
+          <textarea id="chatInput" placeholder="Paste the chat history here...&#10;Example:&#10;Them: I just don't know right now...&#10;You: What do you mean?&#10;Them: It's not you, I'm just busy."></textarea>
+        </div>
+      </div>
+
+      <button id="decodeBtn" class="primary-btn">
+        <i class="ph ph-scan"></i> DECODE PERSONA
+      </button>
+    </section>
+
+    <!-- Loading State -->
+    <section class="loading-section hidden" id="loadingSection">
+      <div class="scanner"></div>
+      <h3 id="loadingText">Connecting to Neural Engine...</h3>
+      <p class="loading-subtext">Analyzing subtext and emotional patterns...</p>
+    </section>
+
+    <!-- Results Section -->
+    <section class="results-section hidden" id="resultsSection">
+      
+      <!-- Top Overview Banner -->
+      <div class="overview-banner glass-panel" id="vibeBanner">
+        <div class="vibe-icon" id="vibeIcon">❓</div>
+        <div class="vibe-text" style="flex: 1;">
+          <h4 id="vibeTitle">Status</h4>
+          <p id="vibeDescription">Analyzing...</p>
+        </div>
+        <div class="archetype-badge hidden" id="archetypeBadge">
+          <i class="ph ph-mask-happy"></i>
+          <span id="archetypeText">The Archetype</span>
+        </div>
+        <div class="archetype-badge hidden" id="darkTriadBadge" style="background: rgba(255,51,102,0.1); border-color: rgba(255,51,102,0.5); color: #ff3366;">
+          <i class="ph ph-skull"></i>
+          <span id="darkTriadText">Narcissist Warning</span>
+        </div>
+      </div>
+
+      <div class="results-grid">
+        
+        <!-- Emotional Attachment -->
+        <div class="result-card glass-panel span-2">
+          <h3 id="headerAttachment"><i class="ph ph-heartbeat"></i> Emotional Attachment</h3>
+          <div class="circle-graph-container">
+            <svg class="circular-chart" viewBox="0 0 36 36">
+              <path class="circle-bg"
+                d="M18 2.0845
+                  a 15.9155 15.9155 0 0 1 0 31.831
+                  a 15.9155 15.9155 0 0 1 0 -31.831"
+              />
+              <path class="circle" id="attachmentCircle"
+                stroke-dasharray="0, 100"
+                d="M18 2.0845
+                  a 15.9155 15.9155 0 0 1 0 31.831
+                  a 15.9155 15.9155 0 0 1 0 -31.831"
+              />
+              <text x="18" y="20.35" class="percentage" id="attachmentValueCircle">0%</text>
+            </svg>
+          </div>
+          <p id="attachmentText" class="insight-text">...</p>
+        </div>
+
+        <!-- Hidden Subtext -->
+        <div class="result-card glass-panel">
+          <h3 id="headerSubtext"><i class="ph ph-mask-happy"></i> Subtext Decoder</h3>
+          <div class="subtext-list" id="subtextList">
+            <!-- Populated by JS -->
+          </div>
+        </div>
+
+        <!-- Red & Green Flags -->
+        <div class="result-card glass-panel">
+          <h3 id="headerFlags"><i class="ph ph-flag-banner"></i> Flag Radar</h3>
+          <div class="flags-container">
+            <div class="flag-col red-flags">
+              <h4 id="headerRedFlags">🚩 Red Flags</h4>
+              <ul id="redFlagsList"></ul>
+            </div>
+            <div class="flag-col green-flags">
+              <h4 id="headerGreenFlags">✅ Green Flags</h4>
+              <ul id="greenFlagsList"></ul>
+            </div>
+          </div>
+        </div>
+
+        <!-- Honesty Meter -->
+        <div class="result-card glass-panel span-1">
+          <h3 id="headerHonesty"><i class="ph ph-scales"></i> Honesty Meter</h3>
+          <div class="honesty-meter-container">
+            <div class="honesty-labels">
+              <span class="manipulative-label">🚩 Manipulative</span>
+              <span id="honestyValue" class="honesty-value">0%</span>
+              <span class="honest-label">Honest ✅</span>
+            </div>
+            <div class="honesty-bar-bg">
+              <div class="honesty-bar-fill" id="honestyFill" style="width: 0%;"></div>
+            </div>
+            <p id="honestyDescription" class="insight-text" style="margin-top: 15px; border-left-color: var(--warning); font-size: 0.9rem;">...</p>
+          </div>
+        </div>
+
+        <!-- Power Dynamics Tracker -->
+        <div class="result-card glass-panel span-1">
+          <h3 id="headerPower"><i class="ph ph-lightning"></i> Power Dynamics</h3>
+          <div class="power-meter-container">
+            <div class="honesty-labels">
+              <span style="color: var(--accent-primary);">You Submissive</span>
+              <span id="powerValue" class="honesty-value">50%</span>
+              <span style="color: #ff5e00;">Target Dominant</span>
+            </div>
+            <div class="honesty-bar-bg" style="border-color: rgba(255, 94, 0, 0.2);">
+              <div class="honesty-bar-fill" id="powerFill" style="width: 50%; background: linear-gradient(90deg, var(--accent-primary) 0%, #ff5e00 100%);"></div>
+            </div>
+            <p id="powerDescription" class="insight-text" style="margin-top: 15px; border-left-color: #ff5e00; font-size: 0.9rem;">...</p>
+          </div>
+        </div>
+
+        <!-- Gaslight & Toxicity Alerts -->
+        <div class="result-card glass-panel span-1 toxicity-card" id="toxicityCard">
+          <h3 id="headerGaslight"><i class="ph ph-warning-circle" style="color: var(--danger);"></i> Gaslight Detector</h3>
+          <div class="subtext-list" id="gaslightList">
+            <!-- Populated by JS -->
+          </div>
+        </div>
+
+        <!-- Inconsistency Catcher -->
+        <div class="result-card glass-panel span-1">
+          <h3 id="headerInconsistencies"><i class="ph ph-detective"></i> Inconsistencies & Lies</h3>
+          <ul id="inconsistencyList" style="list-style-type: none; padding: 0;">
+            <!-- Populated by JS -->
+          </ul>
+        </div>
+
+        <!-- Effort & Investment -->
+        <div class="result-card glass-panel span-1">
+          <h3 id="headerEffort"><i class="ph ph-scales"></i> Effort & Investment</h3>
+          <div class="power-meter-container">
+            <div class="honesty-labels">
+              <span id="labelYourEffort" style="color: var(--accent-primary);">Your Effort</span>
+              <span id="effortValue" class="honesty-value">50/50</span>
+              <span id="labelTheirEffort" style="color: #00ffcc;">Their Effort</span>
+            </div>
+            <div class="honesty-bar-bg" style="border-color: rgba(0, 255, 204, 0.2);">
+              <div class="honesty-bar-fill" id="effortFill" style="width: 50%; background: linear-gradient(90deg, var(--accent-primary) 0%, #00ffcc 100%);"></div>
+            </div>
+            <p id="effortDescription" class="insight-text" style="margin-top: 15px; border-left-color: #00ffcc; font-size: 0.9rem;">...</p>
+          </div>
+        </div>
+
+        <!-- Double Standards -->
+        <div class="result-card glass-panel span-1">
+          <h3 id="headerDoglapan"><i class="ph ph-arrows-left-right"></i> Doglapan (Double Standards)</h3>
+          <ul id="doubleStandardList" style="list-style-type: none; padding: 0;">
+            <!-- Populated by JS -->
+          </ul>
+        </div>
+
+        <!-- Future Predictor -->
+        <div class="result-card glass-panel span-2" style="background: rgba(138, 43, 226, 0.05); border-color: rgba(138, 43, 226, 0.3);">
+          <h3 id="headerFuture" style="color: #cc33ff;"><i class="ph ph-crystal-ball"></i> Future Predictor (Next 3-6 Months)</h3>
+          <p id="futurePredictionText" style="font-size: 1.1rem; font-weight: 600; line-height: 1.6; color: rgba(255,255,255,0.9); padding: 15px; background: rgba(0,0,0,0.3); border-radius: 8px;">...</p>
+        </div>
+
+        <!-- Final Verdict -->
+        <div class="result-card glass-panel span-2 final-verdict">
+          <h3 id="headerVerdict"><i class="ph ph-gavel"></i> Final Verdict & Advice</h3>
+          <p id="verdictText">...</p>
+          <div class="action-plan" id="actionPlan">
+            <!-- Populated by JS -->
+          </div>
+        </div>
+
+        <!-- Smart Auto-Replies -->
+        <div class="result-card glass-panel span-2">
+          <h3 id="headerReplies"><i class="ph ph-chat-circle-dots"></i> Smart Auto-Replies</h3>
+          <p class="insight-text" style="margin-bottom: 15px; border-left-color: var(--accent-secondary);">Copy these AI-generated responses tailored to counter or match their current psychological state.</p>
+          
+          <div id="powerFlipContainer" class="hidden" style="margin-bottom: 20px; background: rgba(255, 51, 102, 0.05); border: 1px solid rgba(255, 51, 102, 0.4); border-radius: 8px; padding: 15px;">
+            <h4 style="color: #ff3366; margin-bottom: 10px; display: flex; align-items: center; gap: 8px;"><i class="ph ph-fire"></i> Savage Power-Flip Reply</h4>
+            <div style="display: flex; gap: 10px; align-items: center; background: rgba(0,0,0,0.4); padding: 12px; border-radius: 6px;">
+                <div id="powerFlipText" style="flex: 1; font-style: italic; color: #fff; font-size: 1.05rem;">...</div>
+                <i class="ph ph-copy reply-copy-icon" id="copyPowerFlipBtn" style="color: #ff3366; cursor: pointer; padding: 8px; background: rgba(255,51,102,0.1); border-radius: 4px;"></i>
+            </div>
+          </div>
+
+          <div class="smart-replies" id="smartReplies">
+            <!-- Populated by JS -->
+          </div>
+        </div>
+
+      </div>
+
+      <div class="action-buttons" style="display: flex; gap: 15px; margin-top: 24px;">
+        <button id="resetBtn" class="secondary-btn" style="margin-top: 0; flex: 1;">
+          <i class="ph ph-arrow-counter-clockwise"></i> Analyze Another
+        </button>
+        <button id="exportBtn" class="primary-btn" style="flex: 2;">
+          <i class="ph ph-download-simple"></i> Download Report (PNG)
+        </button>
+      </div>
+
+    </section>
+  </main>
+
+
+  <script src="app.js"></script>
+</body>
+</html>
