@@ -579,10 +579,10 @@ CRITICAL: Return ONLY a valid JSON object. No markdown formatting, no code block
             { provider: 'openai', model: 'gpt-4o-mini' },
             { provider: 'openai', model: 'gpt-4o' }
         ] : [
-            { provider: 'gemini', ver: 'v1beta', model: 'gemini-1.5-flash', useMime: true },
-            { provider: 'gemini', ver: 'v1beta', model: 'gemini-1.5-pro', useMime: true },
+            { provider: 'gemini', ver: 'v1beta', model: 'gemini-1.5-flash-latest', useMime: true },
+            { provider: 'gemini', ver: 'v1beta', model: 'gemini-1.5-pro-latest', useMime: true },
             { provider: 'gemini', ver: 'v1', model: 'gemini-1.5-flash', useMime: false },
-            { provider: 'gemini', ver: 'v1', model: 'gemini-1.5-pro', useMime: false }
+            { provider: 'gemini', ver: 'v1', model: 'gemini-pro', useMime: false }
         ];
 
         if (modelIndex >= modelTiers.length) {
