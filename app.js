@@ -647,17 +647,22 @@ CRITICAL: Return ONLY a valid JSON object. No markdown formatting, no code block
             if (!response.ok) {
                 const errorData = await response.json();
                 const status = response.status;
-                const errorMsg = errorData.error ? errorData.error.message : "";
+                const errorMsg = errorData.error ? (errorData.error.message || JSON.stringify(errorData.error)) : JSON.stringify(errorData);
                 
+                console.error(`--- NEURAL ENGINE ERROR [KEY ${attempt + 1}] ---`);
+                console.error(`Status: ${status}`);
+                console.error(`Model: ${currentTier.model}`);
+                console.error(`Message: ${errorMsg}`);
+
                 // If quota exceeded or auth error, rotate KEY immediately
-                if (status === 429 || status === 401 || errorMsg.includes("quota") || errorMsg.includes("invalid")) {
-                    console.warn(`Key ${attempt + 1} issue. Rotating key...`);
+                if (status === 429 || status === 401 || errorMsg.includes("quota") || errorMsg.includes("invalid") || errorMsg.includes("API key")) {
+                    console.warn(`Key ${attempt + 1} fatal issue. Rotating key...`);
                     return tryKey(attempt + 1, 0);
                 }
                 
                 // If model not found or version error, rotate MODEL for the same key
                 if (status === 404 || errorMsg.includes("not found") || errorMsg.includes("not supported")) {
-                    console.warn(`Model ${currentTier.model} issue. Trying fallback...`);
+                    console.warn(`Model ${currentTier.model} not available on this tier. Trying fallback...`);
                     return tryKey(attempt, modelIndex + 1);
                 }
                 
