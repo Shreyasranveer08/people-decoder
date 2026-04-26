@@ -578,12 +578,16 @@ CRITICAL: Return ONLY a valid JSON object. No markdown formatting, no code block
         // Tiers of models/versions to try
         const modelTiers = isOpenAI ? [
             { provider: 'openai', model: 'gpt-4o-mini' },
-            { provider: 'openai', model: 'gpt-4o' }
+            { provider: 'openai', model: 'gpt-4o' },
+            { provider: 'openai', model: 'gpt-3.5-turbo' }
         ] : [
             { provider: 'gemini', ver: 'v1beta', model: 'gemini-1.5-flash-latest', useMime: true },
+            { provider: 'gemini', ver: 'v1beta', model: 'gemini-1.5-flash', useMime: true },
             { provider: 'gemini', ver: 'v1beta', model: 'gemini-1.5-pro-latest', useMime: true },
+            { provider: 'gemini', ver: 'v1beta', model: 'gemini-1.5-pro', useMime: true },
+            { provider: 'gemini', ver: 'v1beta', model: 'gemini-1.5-flash-8b', useMime: true },
             { provider: 'gemini', ver: 'v1', model: 'gemini-1.5-flash', useMime: false },
-            { provider: 'gemini', ver: 'v1', model: 'gemini-pro', useMime: false }
+            { provider: 'gemini', ver: 'v1', model: 'gemini-1.0-pro', useMime: false }
         ];
 
         if (modelIndex >= modelTiers.length) {
@@ -664,6 +668,18 @@ CRITICAL: Return ONLY a valid JSON object. No markdown formatting, no code block
                 // If model not found or version error, rotate MODEL for the same key
                 if (status === 404 || errorMsg.includes("not found") || errorMsg.includes("not supported")) {
                     console.warn(`Model ${currentTier.model} not available on this tier. Trying fallback...`);
+                    
+                    // DEBUG: List available models to help fix 404s
+                    if (currentTier.provider === 'gemini') {
+                        fetch(`https://generativelanguage.googleapis.com/${currentTier.ver}/models?key=${key}`)
+                            .then(r => r.json())
+                            .then(d => {
+                                console.log("--- AVAILABLE MODELS FOR THIS KEY ---");
+                                if (d.models) d.models.forEach(m => console.log(m.name));
+                                else console.log("No models listed:", d);
+                            }).catch(e => console.log("Could not list models:", e));
+                    }
+
                     return tryKey(attempt, modelIndex + 1);
                 }
                 
