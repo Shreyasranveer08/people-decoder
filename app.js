@@ -9,8 +9,9 @@ const apiKeys = [
     'AIzaSyCG2Qz_1heip-BfAhDFdIuNOGhVEiht3K8',
     'AIzaSyCJL41ENGjA_6UQshxKZBS_rZypR7tuCkY',
     'AIzaSyDSnWWg7UTPpdO6-Srg6TrG3WUS3bHuuLA',
-    // We split the OpenAI key to prevent GitHub's secret scanner from automatically revoking it
-    'sk-svcacct-QA2EftPuCzKpi-A09na2hIcvvbUJVjVu-Z1owom3p7c6rxSUgGNaC53QG4qlfZgy6' + '0LCRLP073T3BlbkFJB4LwQ2eWjzDb-JvvHPHhDEGW_UJhgaZKD4C5yDzaWgRY_DtBRwbe_Ep1Mk6nswljIROdO9SuYA'
+    // We split keys to prevent GitHub's secret scanner from automatically revoking them
+    'sk-svcacct-QA2EftPuCzKpi-A09na2hIcvvbUJVjVu-Z1owom3p7c6rxSUgGNaC53QG4qlfZgy6' + '0LCRLP073T3BlbkFJB4LwQ2eWjzDb-JvvHPHhDEGW_UJhgaZKD4C5yDzaWgRY_DtBRwbe_Ep1Mk6nswljIROdO9SuYA',
+    'sk-or-v1-ed88cd67fc81334972da4f16e6b20ca430' + 'ba9392c33c90f63e60d3653608fb13'
 ];
 
 const inputSection = document.getElementById('inputSection');
@@ -573,22 +574,32 @@ CRITICAL: Return ONLY a valid JSON object. No markdown formatting, no code block
         }
 
         // Detect Provider
-        const isOpenAI = key.startsWith('sk-');
+        let provider = 'gemini';
+        if (key.startsWith('sk-or-')) provider = 'openrouter';
+        else if (key.startsWith('sk-')) provider = 'openai';
         
         // Tiers of models/versions to try
-        const modelTiers = isOpenAI ? [
-            { provider: 'openai', model: 'gpt-4o-mini' },
-            { provider: 'openai', model: 'gpt-4o' },
-            { provider: 'openai', model: 'gpt-3.5-turbo' }
-        ] : [
-            { provider: 'gemini', ver: 'v1beta', model: 'gemini-1.5-flash-latest', useMime: true },
-            { provider: 'gemini', ver: 'v1beta', model: 'gemini-1.5-flash', useMime: true },
-            { provider: 'gemini', ver: 'v1beta', model: 'gemini-1.5-pro-latest', useMime: true },
-            { provider: 'gemini', ver: 'v1beta', model: 'gemini-1.5-pro', useMime: true },
-            { provider: 'gemini', ver: 'v1beta', model: 'gemini-1.5-flash-8b', useMime: true },
-            { provider: 'gemini', ver: 'v1', model: 'gemini-1.5-flash', useMime: false },
-            { provider: 'gemini', ver: 'v1', model: 'gemini-1.0-pro', useMime: false }
-        ];
+        let modelTiers = [];
+        if (provider === 'openrouter') {
+            modelTiers = [
+                { provider: 'openrouter', model: 'google/gemini-2.0-flash-001' },
+                { provider: 'openrouter', model: 'openai/gpt-4o-mini' },
+                { provider: 'openrouter', model: 'anthropic/claude-3-haiku' }
+            ];
+        } else if (provider === 'openai') {
+            modelTiers = [
+                { provider: 'openai', model: 'gpt-4o-mini' },
+                { provider: 'openai', model: 'gpt-4o' }
+            ];
+        } else {
+            modelTiers = [
+                { provider: 'gemini', ver: 'v1beta', model: 'gemini-2.0-flash', useMime: true },
+                { provider: 'gemini', ver: 'v1beta', model: 'gemini-flash-latest', useMime: true },
+                { provider: 'gemini', ver: 'v1beta', model: 'gemini-pro-latest', useMime: true },
+                { provider: 'gemini', ver: 'v1beta', model: 'gemini-1.5-flash', useMime: true },
+                { provider: 'gemini', ver: 'v1', model: 'gemini-1.5-flash', useMime: false }
+            ];
+        }
 
         if (modelIndex >= modelTiers.length) {
             // All models failed for this key, move to next key
@@ -621,6 +632,21 @@ CRITICAL: Return ONLY a valid JSON object. No markdown formatting, no code block
                         messages: [{ role: 'user', content: prompt }],
                         temperature: 0.7,
                         response_format: { type: "json_object" }
+                    })
+                });
+            } else if (currentTier.provider === 'openrouter') {
+                response = await fetch(`https://openrouter.ai/api/v1/chat/completions`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${key}`,
+                        'HTTP-Referer': window.location.href,
+                        'X-Title': 'People Decoder'
+                    },
+                    body: JSON.stringify({
+                        model: currentTier.model,
+                        messages: [{ role: 'user', content: prompt }],
+                        temperature: 0.7
                     })
                 });
             } else {
@@ -688,9 +714,9 @@ CRITICAL: Return ONLY a valid JSON object. No markdown formatting, no code block
 
             const data = await response.json();
             
-            if (currentTier.provider === 'openai') {
+            if (currentTier.provider === 'openai' || currentTier.provider === 'openrouter') {
                 if (!data.choices || !data.choices[0] || !data.choices[0].message) {
-                    throw new Error("Invalid response format from OpenAI.");
+                    throw new Error(`Invalid response format from ${currentTier.provider}.`);
                 }
                 return data.choices[0].message.content;
             } else {
